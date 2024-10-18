@@ -1,0 +1,13 @@
+services:
+  website:
+    build:
+      context: .      
+      dockerfile: Dockerfile
+    container_name: my_container
+    hostname: talha
+    image: my_grilli_web
+    ports:
+      - "8090:80"
+    volumes:
+      - /home/talha/volume
+
