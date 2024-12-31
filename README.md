@@ -44,6 +44,7 @@ Windows:
 ```bash
 git clone https://github.com/codewithsadee/grilli.git
 ```
+It will run on IP:8090 port
 
 ### Contact
 
