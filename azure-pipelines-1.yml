@@ -1,0 +1,45 @@
+trigger:
+  branches:
+    include:
+      - master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+    displayName: 'Install Node.js'
+
+  - script: |
+      npm install && npm run client-install
+
+      # Download and install Snyk CLI
+      curl --compressed https://downloads.snyk.io/cli/stable/snyk-linux -o snyk
+      chmod +x ./snyk
+      mv ./snyk /usr/local/bin/
+
+      # Install snyk-to-html globally
+      npm install -g snyk-to-html
+
+      # Create results directory
+      mkdir -p results
+
+      # Authenticate and run security scans
+      snyk auth $(SNYK_TOKEN)
+      snyk test --all-projects --json-file-output=results/oss.json
+      snyk code test --sarif-file-output=results/sast.sarif
+
+      # Convert JSON/SARIF output to HTML
+      snyk-to-html -o results/oss.html < results/oss.json
+      snyk-to-html -o results/sast.html < results/sast.sarif
+    env:
+      SNYK_TOKEN: $(SNYK_TOKEN)
+    displayName: 'Security Scans'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(System.DefaultWorkingDirectory)/results'
+      ArtifactName: 'results'
+      publishLocation: 'Container'
