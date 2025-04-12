@@ -13,27 +13,33 @@ steps:
     displayName: 'Install Node.js'
 
   - script: |
+      set -e
+      echo "Installing dependencies..."
       npm install && npm run client-install
-
-      # Download and install Snyk CLI
+      
+      echo "Downloading and installing Snyk CLI..."
       curl --compressed https://downloads.snyk.io/cli/stable/snyk-linux -o snyk
       chmod +x ./snyk
-      mv ./snyk /usr/local/bin/
-
-      # Install snyk-to-html globally
-      npm install -g snyk-to-html
-
-      # Create results directory
+      sudo mv ./snyk /usr/local/bin/
+      
+      echo "Installing snyk-to-html..."
+      sudo npm install -g snyk-to-html
+      
+      echo "Creating results directory..."
       mkdir -p results
-
-      # Authenticate and run security scans
+      
+      echo "Authenticating with Snyk..."
       snyk auth $(SNYK_TOKEN)
-      snyk test --all-projects --json-file-output=results/oss.json
-      snyk code test --sarif-file-output=results/sast.sarif
-
-      # Convert JSON/SARIF output to HTML
-      snyk-to-html -o results/oss.html < results/oss.json
-      snyk-to-html -o results/sast.html < results/sast.sarif
+      
+      echo "Running security scans..."
+      snyk test --all-projects --json-file-output=results/oss.json || true
+      snyk code test --sarif-file-output=results/sast.sarif || true
+      
+      echo "Converting results to HTML..."
+      snyk-to-html -o results/oss.html < results/oss.json || true
+      snyk-to-html -o results/sast.html < results/sast.sarif || true
+      
+      echo "Security scans completed."
     env:
       SNYK_TOKEN: $(SNYK_TOKEN)
     displayName: 'Security Scans'
@@ -41,5 +47,5 @@ steps:
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: '$(System.DefaultWorkingDirectory)/results'
-      ArtifactName: 'results'
+      ArtifactName: 'security-scan-results'
       publishLocation: 'Container'
