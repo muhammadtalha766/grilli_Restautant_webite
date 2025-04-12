@@ -1,0 +1,19 @@
+# Azure DevOps Pipeline for GitLab HTML/CSS/JS Project
+
+trigger:
+  - master  # Runs pipeline on every push to 'master' branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - script: echo "✅ Code cloned successfully from GitLab."
+    displayName: 'Echo GitLab Clone Message'
+
+  # Optional: Publish static files as artifact (for viewing or deploy)
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)'
+      ArtifactName: 'static-website'
+      publishLocation: 'Container'
+    displayName: '📦 Publish Website Files'
